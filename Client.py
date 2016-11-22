@@ -44,7 +44,7 @@ def user_input(username):
             to_server = Packets.Disconnect(username)
             if testing:
                 print(to_server.encode())
-            sender.sendall(to_server)
+            sender.send(to_server.encode())
             sender.close()
             break
 

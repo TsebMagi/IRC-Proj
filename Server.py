@@ -3,6 +3,7 @@
 import socket
 import queue
 import threading
+import Packets
 
 USERS = []
 ROOMS = []
@@ -42,10 +43,12 @@ def recieve_messages():
         print("receiver is up")
     while 1:
         client, address = listener.accept()
-        new_connection = client.recv(1024)
+        new_connection = client.recv(2048)
+        new_connection = Packets.decode(new_connection)
+        print(new_connection)
         if new_connection:
-            client.send(new_connection)
-            print("new connection from " + new_connection)
+            client.send(new_connection.encode())
+            print("new connection from " + new_connection.encode())
         client.close()
 
 
