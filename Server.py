@@ -39,7 +39,7 @@ USERS = []
 # list of Rooms on the server
 ROOMS = []
 # used for testing, in a normal distribution of this it would be run across networks
-SERVER_ADDRESS = ('0.0.0.0', 9001)
+SERVER_ADDRESS = ("0.0.0.0", 9001)
 SERVER_SOCKET = None
 
 
@@ -145,9 +145,9 @@ class IRCServer(socketserver.StreamRequestHandler):
 
     def handle(self):
         # get the input
-        self.data = self.rfile.readline().strip()
-        new_message = Packets.encode(self.data)
+        new_input = self.rfile.readline().strip()
         address = self.connection.getpeername()
+        new_message = Packets.encode(new_input)
         # process the input
         try:
             # check for what type of packet was sent and process appropriately

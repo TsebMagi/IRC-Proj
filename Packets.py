@@ -174,8 +174,8 @@ class Message(Packet):
 
 
 def encode(packet_arg : str) -> Packet:
-    split_packet = packet_arg.split(" ")
-    split_packet.remove("\n")
+    packet_arg = packet_arg.strip('\n')
+    split_packet = packet_arg.split(' ')
     if split_packet[0] == "CONNECT":
         return Connect(split_packet[1], Status.string_to_status(split_packet[2]), Errors.string_to_error(split_packet[3]))
     elif split_packet[0] == "DISCONNECT":
