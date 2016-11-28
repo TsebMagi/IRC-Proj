@@ -58,6 +58,14 @@ class IRCClient(socketserver.StreamRequestHandler):
 
 
 def user_input(username):
+    # initial connection
+    to_server = Packets.Connect(username)
+    try:
+        send_to_server(to_server)
+    except socket.error as e:
+        if e.errno == 111:
+            print("Couldn't connect to Server")
+            return
     while 1:
         user_command = input(lineHeader + username + "> ")
         if user_command == "/quit":
