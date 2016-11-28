@@ -207,6 +207,21 @@ class Message(Packet):
         return self.op_code.__str__()+" "+self.username.__str__()+" "+self.room_to_message.__str__()+" "+self.message.__str__()+" "+self.status.__str__()+" "+self.errors.__str__()
 
 
+class Broadcast(Packet):
+
+    def __init__(self, username, message, status=Status.OK,errors=Errors.NO_ERROR):
+        super().__init__(OpCode.MESSAGE, status, errors)
+        self.username = username
+        self.message = message
+
+    def encode(self):
+        return (self.op_code.__str__()+" "+self.username.__str__()+" "+self.message.__str__()+" "+self.status.__str__()+" "+self.errors.__str__()+"\n").encode()
+
+    def __str__(self):
+        return self.op_code.__str__()+" "+self.username.__str__()+" "+self.message.__str__()+" "+self.status.__str__()+" "+self.errors.__str__()
+
+
+
 def decode(packet_arg):
     split_packet = packet_arg.split(" ")
 
@@ -231,5 +246,7 @@ def decode(packet_arg):
         return Pm(split_packet[1], split_packet[2], ' '.join(split_packet[3:-2]), split_packet[-2], split_packet[-1])
     elif split_packet[0] == "MESSAGE":
         return Message(split_packet[1], split_packet[2], ' '.join(split_packet[3:-2]), split_packet[-2], split_packet[-1])
+    elif split_packet[0] == "BROADCAST":
+        return Broadcast(split_packet[1], ' '.join(split_packet[2:-2]), split_packet[-2], split_packet[-1])
     else:
         raise TypeError

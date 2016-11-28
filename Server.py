@@ -158,6 +158,10 @@ class IRCServer(socketserver.StreamRequestHandler):
             else:
                 print(e)
 
+    def broadcast_process(self, packet):
+        for user in USERS:
+            self.send_packet(packet, user)
+
     def handle(self):
         # get the input
         new_input = self.rfile.readline()
@@ -190,6 +194,8 @@ class IRCServer(socketserver.StreamRequestHandler):
                 new_message.status, new_message.errors = self.pm_process(self,new_message)
             elif isinstance(new_message, Packets.ListMembers):
                 new_message = self.list_members(new_message)
+            elif isinstance(new_message, Packets.Broadcast):
+                new_message = self.broadcast_process(new_message)
             elif isinstance(new_message, Packets.ListRooms):
                 new_message = self.list_rooms_process(new_message)
             else:
