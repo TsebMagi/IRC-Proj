@@ -3,6 +3,16 @@
 import socket
 import Packets
 import socketserver
+import sys
+
+
+class Disconnection(Exception):
+
+    def __init__(self, value):
+        self.value = value
+
+    def __str__(self):
+        return repr(self.value)
 
 
 class User(object):
@@ -29,9 +39,16 @@ USERS = []
 ROOMS = []
 # used for testing, in a normal distribution of this it would be run across networks
 SERVER_ADDRESS = ('0.0.0.0', 9001)
+SERVER_SOCKET = None
+
+
+def interrupt_handler(signal, frame):
+    SERVER_SOCKET.close()
+    sys.exit(0)
 
 
 class IRCServer(socketserver.StreamRequestHandler):
+
 
     @staticmethod
     def connect_process(packet: Packets.Connect, received_from: User) -> Packets.Errors:
@@ -156,4 +173,5 @@ class IRCServer(socketserver.StreamRequestHandler):
 
 if __name__ == "__main__":
     server = socketserver.ThreadingTCPServer(SERVER_ADDRESS,IRCServer)
+    SERVER_SOCKET = server.socket
     server.serve_forever()
