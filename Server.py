@@ -48,7 +48,7 @@ def interrupt_handler(signal, frame):
     SERVER_SOCKET.close()
     for user in USERS:
         IRCServer.send_packet(Packets.Disconnect, user)
-    sys.exit()
+    sys.exit(0)
 
 signal.signal(signal.SIGINT, interrupt_handler)
 
@@ -135,7 +135,7 @@ class IRCServer(socketserver.StreamRequestHandler):
         try:
             s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             s.connect(user.address)
-            s.send(packet.decode())
+            s.send(packet.encode())
             s.close()
         except socket.error as e:
             if e.errno == 111: #connection error
@@ -147,7 +147,7 @@ class IRCServer(socketserver.StreamRequestHandler):
         # get the input
         new_input = self.rfile.readline().strip()
         address = self.connection.getpeername()
-        new_message = Packets.encode(new_input)
+        new_message = Packets.decode(new_input)
         # process the input
         try:
             # check for what type of packet was sent and process appropriately

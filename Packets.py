@@ -16,7 +16,7 @@ class OpCode(Enum):
     MESSAGE = 8
     PM = 9
 
-    def __str__(self) -> str:
+    def __str__(self):
         return self.name
 
 
@@ -25,10 +25,11 @@ class Status(Enum):
     OK = 0
     ERROR = 1
 
-    def __str__(self) ->str:
+    def __str__(self):
         return self.name
 
-    def string_to_status(self, to_convert):
+    @staticmethod
+    def string_to_status(to_convert):
         if to_convert == "OK":
             return Status.OK
         elif to_convert == "ERROR":
@@ -48,10 +49,11 @@ class Errors(Enum):
     USER_NOT_IN_ROOM = 6
     MALFORMED_PACKET = 7
 
-    def __str__(self) -> str:
+    def __str__(self):
         return self.name
 
-    def string_to_error(self, to_convert):
+    @staticmethod
+    def string_to_error(to_convert):
         if to_convert == "NO_ERROR":
             return Errors.NO_ERROR
         elif to_convert == "SERVER_NOT_FOUND":
@@ -71,8 +73,8 @@ class Packet(object):
         self.status = status
         self.errors = errors
 
-    def decode(self) -> str:
-        return self.op_code.__str__()+" "+self.status.__str__()+" "+self.errors.__str__()+"\n"
+    def encode(self):
+        return (self.op_code.__str__()+" "+self.status.__str__()+" "+self.errors.__str__()+"\n").encode()
 
 
 class Connect (Packet):
@@ -81,9 +83,8 @@ class Connect (Packet):
         super().__init__(OpCode.CONNECT, status, errors)
         self.username = username
 
-    def decode(self) -> str:
-        return self.op_code.__str__()+" "+self.username.__str__()+" "+self.status.__str__()+" "+self.errors.__str__()+"\n"
-
+    def encode(self):
+        return (self.op_code.__str__()+" "+self.username.__str__()+" "+self.status.__str__()+" "+self.errors.__str__()+"\n").encode()
 
 
 class Disconnect(Packet):
@@ -92,8 +93,8 @@ class Disconnect(Packet):
         super().__init__(OpCode.DISCONNECT, status, errors)
         self.username = username
 
-    def decode(self) -> str:
-        return self.op_code.__str__()+" "+self.username.__str__()+" "+self.status.__str__()+" "+self.errors.__str__()+"\n"
+    def encode(self):
+        return (self.op_code.__str__()+" "+self.username.__str__()+" "+self.status.__str__()+" "+self.errors.__str__()+'\n').encode()
 
 
 class CreateRoom (Packet):
@@ -103,8 +104,8 @@ class CreateRoom (Packet):
         self.username = username
         self.room = room
 
-    def decode(self) -> str:
-        return self.op_code.__str__()+" "+self.username.__str__()+" "+self.room.__str__()+" "+self.status.__str__()+" "+self.errors.__str__()+"\n"
+    def encode(self):
+        return (self.op_code.__str__()+" "+self.username.__str__()+" "+self.room.__str__()+" "+self.status.__str__()+" "+self.errors.__str__()+"\n").encode()
 
 
 class JoinRoom (Packet):
@@ -114,8 +115,8 @@ class JoinRoom (Packet):
         self.username = username
         self.room = room
 
-    def decode(self) -> str:
-        return self.op_code.__str__()+" "+self.username.__str__()+" "+self.status.__str__()+" "+self.errors.__str__()+"\n"
+    def encode(self):
+        return (self.op_code.__str__()+" "+self.username.__str__()+" "+self.status.__str__()+" "+self.errors.__str__()+"\n").encode()
 
 
 class ListRooms(Packet):
@@ -124,8 +125,8 @@ class ListRooms(Packet):
         super().__init__(OpCode.LIST_ROOMS, status, errors)
         self.response = response
 
-    def decode(self) -> str:
-        return self.op_code.__str__()+" "+self.response.__str__()+" "+self.status.__str__()+" "+self.errors.__str__()+"\n"
+    def encode(self) -> str:
+        return (self.op_code.__str__()+" "+self.response.__str__()+" "+self.status.__str__()+" "+self.errors.__str__()+"\n").encode()
 
 
 class LeaveRoom(Packet):
@@ -135,8 +136,9 @@ class LeaveRoom(Packet):
         self.username = username
         self.room = room
 
-    def decode(self) -> str:
-        return self.op_code.__str__()+" "+self.username.__str__()+" "+self.room.__str__()+" "+self.status.__str__()+" "+self.errors.__str__()+"\n"
+    def encode(self):
+        return (self.op_code.__str__()+" "+self.username.__str__()+" "+self.room.__str__()+" "+self.status.__str__()+" "+self.errors.__str__()+"\n").encode()
+
 
 class ListMembers(Packet):
 
@@ -145,8 +147,8 @@ class ListMembers(Packet):
         self.room = room
         self.response = response
 
-    def decode(self) -> str:
-        return self.op_code.__str__()+" "+self.room.__str__()+" "+self.response.__str__()+" "+self.status.__str__()+" "+self.errors.__str__()+"\n"
+    def encode(self):
+        return (self.op_code.__str__()+" "+self.room.__str__()+" "+self.response.__str__()+" "+self.status.__str__()+" "+self.errors.__str__()+"\n").encode()
 
 
 class Pm(Packet):
@@ -157,8 +159,8 @@ class Pm(Packet):
         self.sent_to = sent_to
         self.message = message
 
-    def decode(self) -> str:
-        return self.op_code.__str__()+" "+self.sent_from.__str__()+" "+self.sent_to.__str__()+" "+self.message.__str__()+" "+self.status.__str__()+" "+self.errors.__str__()+"\n"
+    def encode(self):
+        return (self.op_code.__str__()+" "+self.sent_from.__str__()+" "+self.sent_to.__str__()+" "+self.message.__str__()+" "+self.status.__str__()+" "+self.errors.__str__()+"\n").encode()
 
 
 class Message(Packet):
@@ -169,13 +171,13 @@ class Message(Packet):
         self.room_to_message = room_to_message
         self.message = message
 
-    def decode(self) -> str:
-        return self.op_code.__str__()+" "+self.username.__str__()+" "+self.room_to_message.__str__()+" "+self.message.__str__()+" "+self.status.__str__()+" "+self.errors.__str__()+"\n"
+    def encode(self):
+        return (self.op_code.__str__()+" "+self.username.__str__()+" "+self.room_to_message.__str__()+" "+self.message.__str__()+" "+self.status.__str__()+" "+self.errors.__str__()+"\n").encode()
 
 
-def encode(packet_arg : str) -> Packet:
-    packet_arg = packet_arg.strip('\n')
-    split_packet = packet_arg.split(' ')
+def decode(packet_arg):
+    split_packet = packet_arg.decode().split(" ")
+
     if split_packet[0] == "CONNECT":
         return Connect(split_packet[1], Status.string_to_status(split_packet[2]), Errors.string_to_error(split_packet[3]))
     elif split_packet[0] == "DISCONNECT":
@@ -195,4 +197,4 @@ def encode(packet_arg : str) -> Packet:
     elif split_packet[0] == "MESSAGE":
         return Message(split_packet[1], split_packet[2], ' '.join(split_packet[3:-2]), split_packet[-2], split_packet[-1])
     else:
-        return
+        raise TypeError
