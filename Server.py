@@ -161,6 +161,7 @@ class IRCServer(socketserver.StreamRequestHandler):
             new_message = Packets.decode(new_input)
         except TypeError as e:
             print("Error Processing received Packet: " + new_input + "error generated: " + e)
+            return
         # process the input
         try:
             # check for what type of packet was sent and process appropriately
@@ -188,6 +189,7 @@ class IRCServer(socketserver.StreamRequestHandler):
         except TypeError as e:
             new_message.errors = Packets.Errors.MALFORMED_PACKET
         self.wfile.write(new_message.encode())
+        return
 
 
 if __name__ == "__main__":
