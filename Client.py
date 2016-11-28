@@ -42,7 +42,7 @@ class IRCClient(socketserver.StreamRequestHandler):
             data = self.rfile.readline()
             message = Packets.decode(data.decode().strip())
             if testing:
-                print(message)
+                print("Client received Packet: " + message)
 
             if isinstance(message, Packets.Message):
                 print(lineHeader + message.username + "-> " + message.room_to_message + " " + message.message)
@@ -138,6 +138,8 @@ def send_to_server(message):
     try:
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         s.connect(SERVER_ADDRESS)
+        if testing:
+            print("Packet to Server: " + message)
         s.send(message.encode())
         error = Packets.decode(s.makefile("r").readline().strip())
         if error.errors != Packets.Errors.NO_ERROR:

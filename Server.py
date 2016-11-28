@@ -63,6 +63,8 @@ class IRCServer(socketserver.StreamRequestHandler):
             if user.handle == packet.username:
                 return Packets.Errors.USER_ALREADY_EXISTS
         USERS.append(User(packet.username, received_from.address))
+        if testing:
+            print(USERS)
         return Packets.Errors.NO_ERROR
 
     @staticmethod
@@ -88,6 +90,8 @@ class IRCServer(socketserver.StreamRequestHandler):
                 room.add_to_room(packet.username)
                 return Packets.Errors.NO_ERROR
         ROOMS.append(Room(packet.room, packet.username))
+        if testing:
+            print(ROOMS)
         return Packets.Errors.NO_ERROR
 
     @staticmethod
@@ -150,7 +154,8 @@ class IRCServer(socketserver.StreamRequestHandler):
         new_input = self.rfile.readline()
         new_input = new_input.decode()
         new_input = new_input.strip()
-        print(new_input)
+        if testing:
+            print("Server received Packet: " + new_input)
         address = self.connection.getpeername()
         new_message = Packets.decode(new_input)
         # process the input
