@@ -3,6 +3,7 @@
 
 from enum import Enum
 
+testing = True
 
 # Allowed Op Codes
 class OpCode(Enum):
@@ -176,7 +177,10 @@ class Message(Packet):
 
 
 def decode(packet_arg):
-    split_packet = packet_arg.decode().split(" ")
+    split_packet = packet_arg.decode().strip().split(" ")
+
+    if testing:
+        print(split_packet)
 
     if split_packet[0] == "CONNECT":
         return Connect(split_packet[1], Status.string_to_status(split_packet[2]), Errors.string_to_error(split_packet[3]))
