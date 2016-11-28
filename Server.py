@@ -167,9 +167,9 @@ class IRCServer(socketserver.StreamRequestHandler):
             elif isinstance(new_message, Packets.LeaveRoom):
                 new_message.errors = self.leave_room_process(new_message)
             elif isinstance(new_message, Packets.Message):
-                new_message.errors = self.message_process(new_message)
+                new_message.errors = self.message_process(self,new_message)
             elif isinstance(new_message, Packets.Pm):
-                new_message.errors = self.pm_process(new_message)
+                new_message.errors = self.pm_process(self,new_message)
             elif isinstance(new_message, Packets.ListMembers):
                 new_message = self.list_members(new_message)
             elif isinstance(new_message, Packets.ListRooms):
