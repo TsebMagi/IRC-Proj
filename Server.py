@@ -6,6 +6,8 @@ import socketserver
 import sys
 import signal
 
+testing = True
+
 
 class Disconnection(Exception):
 
@@ -138,14 +140,16 @@ class IRCServer(socketserver.StreamRequestHandler):
             s.send(packet.encode())
             s.close()
         except socket.error as e:
-            if e.errno == 111: #connection error
+            if e.errno == 111:  # connection error
                 USERS.remove(user)
             else:
                 print(e)
 
     def handle(self):
         # get the input
-        new_input = self.rfile.readline().strip()
+        new_input = self.rfile.readline()
+        new_input = new_input.decode()
+        new_input = new_input.strip()
         print(new_input)
         address = self.connection.getpeername()
         new_message = Packets.decode(new_input)
@@ -175,7 +179,7 @@ class IRCServer(socketserver.StreamRequestHandler):
         # handle any type errors
         except TypeError as e:
             new_message.errors = Packets.Errors.MALFORMED_PACKET
-        self.wfile.write(new_message.decode())
+        self.wfile.write(new_message.encode())
 
 
 if __name__ == "__main__":

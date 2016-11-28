@@ -177,7 +177,7 @@ class Message(Packet):
 
 
 def decode(packet_arg):
-    split_packet = packet_arg.decode().strip().split(" ")
+    split_packet = packet_arg.split(" ")
 
     if testing:
         print(split_packet)

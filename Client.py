@@ -6,6 +6,8 @@ import threading
 import socketserver
 import socket
 
+testing = True
+
 # basic server connection set up
 listening_host = '0.0.0.0'
 listening_port = 9002
@@ -37,8 +39,10 @@ class IRCClient(socketserver.StreamRequestHandler):
     def handle(self):
         try:
             # get data
-            data = self.rfile.readline().strip()
-            message = Packets.decode(data)
+            data = self.rfile.readline()
+            message = Packets.decode(data.decode().strip())
+            if testing:
+                print(message)
 
             if isinstance(message, Packets.Message):
                 print(lineHeader + message.username + "-> " + message.room_to_message + " " + message.message)
@@ -48,86 +52,82 @@ class IRCClient(socketserver.StreamRequestHandler):
                 print("You have been disconnected")
                 exit(1)
             else:
-                print("Error Recieved Bad Packet")
+                print("Error Received Bad Packet")
         except SystemError:
             exit(1)
 
 
 def user_input(username):
     while 1:
-        sender = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        sender.connect(SERVER_ADDRESS)
-        inpt = input(lineHeader + username + "> ")
-        if inpt == "/quit":
+        user_command = input(lineHeader + username + "> ")
+        if user_command == "/quit":
             # disconnect
             to_server = Packets.Disconnect(username)
             try:
-                sender.send(to_server)
+                send_to_server(to_server)
             except socket.error as e:
                 if e.errno == 111:
                     print("Could not connect to Server")
-            sender.close()
-            running = False
             break
 
-        elif inpt.find("/message") != -1:
-            inpt.strip("/message").strip()
-            to_send = inpt.split(' ')
+        elif user_command.find("/message") != -1:
+            user_command.strip("/message").strip()
+            to_send = user_command.split(' ')
             if len(to_send) < 3:
                 print("Not a valid message command try '/message <room name> <message>")
             else:
                 to_server = Packets.Message(username, to_send[1],' '.join(to_send[2:]))
                 send_to_server(to_server)
 
-        elif inpt.find("/create") != -1:
-            to_send = inpt.split(' ')
+        elif user_command.find("/create") != -1:
+            to_send = user_command.split(' ')
             if len(to_send) != 2:
                 print("Not a valid create command try '/create <room name>' ")
             else:
                 to_server = Packets.CreateRoom(username, to_send[1])
                 send_to_server(to_server)
 
-        elif inpt.find("/join") != -1:
-            to_send = inpt.split(' ')
+        elif user_command.find("/join") != -1:
+            to_send = user_command.split(' ')
             if len(to_send) != 2:
                 print("Not valid join command try '/join <room name>'")
             else:
                 to_server = Packets.CreateRoom(username, to_send[1])
                 send_to_server(to_server)
 
-        elif inpt.find("/list rooms") != -1:
-            to_send = inpt.split(' ')
+        elif user_command.find("/list rooms") != -1:
+            to_send = user_command.split(' ')
             if len(to_send) != 2:
                 print("Not a valid list command try:  '/list rooms' ")
             else:
                 to_server = Packets.ListRooms()
                 send_to_server(to_server)
 
-        elif inpt.find("/list users") != -1:
-            to_send = inpt.split(' ')
+        elif user_command.find("/list users") != -1:
+            to_send = user_command.split(' ')
             if len(to_send) != 3:
                 print("Not a valid list command try '/list users <room name>'")
             else:
                 to_server = Packets.ListMembers(to_send[2])
                 send_to_server(to_server)
 
-        elif inpt.find("/leave") != -1:
-            to_send = inpt.split(' ')
+        elif user_command.find("/leave") != -1:
+            to_send = user_command.split(' ')
             if len(to_send) != 2:
                 print("Not valid leave command try '/leave <room name>'")
             else:
                 to_server = Packets.LeaveRoom(username, to_send[1])
                 send_to_server(to_server)
 
-        elif inpt.find("/PM") != -1:
-            to_send = inpt.split(' ')
+        elif user_command.find("/PM") != -1:
+            to_send = user_command.split(' ')
             if len(to_send) < 3:
                 print("Not a valid Pm command try '/PM <username> <message>'")
             else:
                 to_server = Packets.Pm(username, to_send[1], ' '.join(to_send[2:]))
                 send_to_server(to_server)
 
-        elif inpt.find("/help") != -1:
+        elif user_command.find("/help") != -1:
             print(helpText)
 
         else:
