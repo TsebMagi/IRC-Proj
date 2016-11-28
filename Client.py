@@ -46,9 +46,9 @@ class IRCClient(socketserver.StreamRequestHandler):
                 print("Client received Packet: " + message.__str__())
 
             if isinstance(message, Packets.Message):
-                print(lineHeader + message.username + "-> " + message.room_to_message + " " + message.message)
+                print(lineHeader + message.username + "-> " + message.room_to_message + " " + message.message + "\n")
             elif isinstance(message, Packets.Pm):
-                print(lineHeader + message.sent_from + ": "+ message.message)
+                print(lineHeader + message.sent_from + ": "+ message.message + "\n")
             elif isinstance(message, Packets.Disconnect):
                 print("You have been disconnected")
                 exit(1)
@@ -86,7 +86,6 @@ def user_input(username):
             break
 
         elif user_command.find("/message") != -1:
-            user_command.strip("/message").strip()
             to_send = user_command.split(' ')
             if len(to_send) < 3:
                 print("Not a valid message command try '/message <room name> <message>")
@@ -107,7 +106,7 @@ def user_input(username):
             if len(to_send) != 2:
                 print("Not valid join command try '/join <room name>'")
             else:
-                to_server = Packets.CreateRoom(username, to_send[1])
+                to_server = Packets.JoinRoom(username, to_send[1])
                 send_to_server(to_server)
 
         elif user_command.find("/list rooms") != -1:
