@@ -5,6 +5,7 @@ import Packets
 import threading
 import socketserver
 import socket
+import time
 
 testing = True
 
@@ -13,7 +14,7 @@ listening_host = '0.0.0.0'
 listening_port = 9002
 client_address = (listening_host, listening_port)
 
-SERVER_ADDRESS = ("0.0.0.0", 9001)
+SERVER_ADDRESS = ("127.0.0.1", 9001)
 
 # user name base value and queue for messages
 USERNAME = "badUser"
@@ -70,12 +71,18 @@ def user_input(username):
         user_command = input(lineHeader + username + "> ")
         if user_command == "/quit":
             # disconnect
-            to_server = Packets.Disconnect(username)
             try:
-                send_to_server(to_server)
+                to_server = Packets.Disconnect(username)
+                s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+                s.connect(SERVER_ADDRESS)
+                s.send(to_server.encode())
+                s.close()
             except socket.error as e:
-                if e.errno == 111:
-                    print("Could not connect to Server")
+                if e.errno == 111:  # connection error
+                    print("Could not connect to server")
+                else:
+                    print("Error: " + e.__str__())
+            print("Exiting Chat Program")
             break
 
         elif user_command.find("/message") != -1:
@@ -149,15 +156,18 @@ def send_to_server(message):
         if testing:
             print("Packet to Server: " + message.__str__())
         s.send(message.encode())
-        error = Packets.decode(s.makefile("r").readline().strip())
-        if error.errors != Packets.Errors.NO_ERROR:
-            print("Error: " + error.errors.__str__())
+        response = s.makefile("r").readline().strip()
+        if testing:
+            print("Response from Server: " + response)
+        error = Packets.decode(response)
+        if error.status != Packets.Status.OK:
+            print("Packet in Error State: " + error.errors.__str__())
         s.close()
     except socket.error as e:
         if e.errno == 111:  # connection error
             print("Could not connect to server")
         else:
-            print("Error: " + e)
+            print("Error: " + e.__str__())
 
 
 if __name__ == '__main__':
@@ -166,8 +176,9 @@ if __name__ == '__main__':
     while USERNAME.find(' ') != -1:
         print("Invalid user name, no spaces allowed")
         USERNAME = input("Enter Username: ").strip()
-    client = socketserver.ThreadingTCPServer((SERVER_ADDRESS[0],SERVER_ADDRESS[1]+1), IRCClient)
-    client_thread = threading.Thread(target= client.serve_forever)
+    client = socketserver.ThreadingTCPServer((SERVER_ADDRESS[0],SERVER_ADDRESS[1]+100), IRCClient)
+    client_thread = threading.Thread(target=client.serve_forever)
     client_thread.daemon = True
     client_thread.start()
     user_input(USERNAME)
+

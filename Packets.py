@@ -211,7 +211,7 @@ def decode(packet_arg):
     split_packet = packet_arg.split(" ")
 
     if testing:
-        print(split_packet)
+        print("Packet after Split:" + split_packet.__str__())
 
     if split_packet[0] == "CONNECT":
         return Connect(split_packet[1], Status.string_to_status(split_packet[2]), Errors.string_to_error(split_packet[3]))
@@ -233,4 +233,3 @@ def decode(packet_arg):
         return Message(split_packet[1], split_packet[2], ' '.join(split_packet[3:-2]), split_packet[-2], split_packet[-1])
     else:
         raise TypeError
-    
