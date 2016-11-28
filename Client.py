@@ -62,7 +62,7 @@ def user_input(username):
             # disconnect
             to_server = Packets.Disconnect(username)
             try:
-                sender.send(to_server.encode())
+                sender.send(to_server)
             except socket.error as e:
                 if e.errno == 111:
                     print("Could not connect to Server")
@@ -134,7 +134,7 @@ def user_input(username):
             print(lineHeader + "> " + "Invalid Command type '/help' for a list of valid commands and their usage.")
 
 
-def send_to_server(message: Packets.Packet):
+def send_to_server(message):
     try:
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         s.connect(SERVER_ADDRESS)

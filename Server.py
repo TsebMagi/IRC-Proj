@@ -145,7 +145,7 @@ class IRCServer(socketserver.StreamRequestHandler):
 
     def handle(self):
         # get the input
-        new_input = self.rfile.readline().strip()
+        new_input = self.rfile.readline().decode().strip()
         address = self.connection.getpeername()
         new_message = Packets.decode(new_input)
         # process the input
