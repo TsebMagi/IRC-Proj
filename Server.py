@@ -157,7 +157,10 @@ class IRCServer(socketserver.StreamRequestHandler):
         if testing:
             print("Server received Packet: " + new_input)
         address = self.connection.getpeername()
-        new_message = Packets.decode(new_input)
+        try:
+            new_message = Packets.decode(new_input)
+        except TypeError as e:
+            print("Error Processing received Packet: " + new_input + "error generated: " + e)
         # process the input
         try:
             # check for what type of packet was sent and process appropriately
