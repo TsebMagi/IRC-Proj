@@ -29,6 +29,7 @@ helpText = """Available commands:
 /list users <Room to see users from>
 /leave <Room Name to Leave>
 /PM <User Name to Message> <Message>
+/broadcast <message>
 /help (displays this help message)"""
 
 # used for stock output
@@ -46,9 +47,11 @@ class IRCClient(socketserver.StreamRequestHandler):
                 print("Client received Packet: " + message.__str__())
 
             if isinstance(message, Packets.Message):
-                print(lineHeader + message.username + "-> " + message.room_to_message + " " + message.message)
+                print(lineHeader + message.username + "-> " + message.room_to_message + ": " + message.message + "\n")
             elif isinstance(message, Packets.Pm):
-                print(lineHeader + message.sent_from + ": "+ message.message)
+                print(lineHeader + message.sent_from + ": "+ message.message + "\n")
+            elif isinstance(message, Packets.Broadcast):
+                print(lineHeader + "Broadcast from: " + message.username + ": " + message.message + "\n")
             elif isinstance(message, Packets.Disconnect):
                 print("You have been disconnected")
                 exit(1)
@@ -141,6 +144,13 @@ def user_input(username):
             else:
                 to_server = Packets.Pm(username, to_send[1], ' '.join(to_send[2:]))
                 send_to_server(to_server)
+
+        elif user_command.find("/broadcast") != -1:
+            to_send = user_command.split(' ')
+            if len(to_send) < 2:
+                print("Not a valid broadcast command try '/broadcast <message>'")
+            else:
+                to_server = Packets.Broadcast(username, ' '.join(to_send[1:]))
 
         elif user_command.find("/help") != -1:
             print(helpText)
