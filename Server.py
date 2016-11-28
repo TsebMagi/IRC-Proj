@@ -31,7 +31,7 @@ ROOMS = []
 SERVER_ADDRESS = ('0.0.0.0', 9001)
 
 
-class IRCServer(socketserver.BaseRequestHandler):
+class IRCServer(socketserver.StreamRequestHandler):
 
     @staticmethod
     def connect_process(packet: Packets.Connect, received_from: User) -> Packets.Errors:
@@ -123,7 +123,7 @@ class IRCServer(socketserver.BaseRequestHandler):
 
     def handle(self):
         # get the input
-        self.data = self.request.rfile.readline().strip()
+        self.data = self.rfile.readline().strip()
         new_message = Packets.encode(self.data)
         # process the input
         try:
