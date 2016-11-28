@@ -4,6 +4,7 @@ import socket
 import Packets
 import socketserver
 import sys
+import signal
 
 
 class Disconnection(Exception):
@@ -42,20 +43,24 @@ SERVER_ADDRESS = ('0.0.0.0', 9001)
 SERVER_SOCKET = None
 
 
+# The following handles a ctrl-c form the command line running the server
 def interrupt_handler(signal, frame):
     SERVER_SOCKET.close()
-    sys.exit(0)
+    for user in USERS:
+        IRCServer.send_packet(Packets.Disconnect, user)
+    sys.exit()
+
+signal.signal(signal.SIGINT, interrupt_handler)
 
 
 class IRCServer(socketserver.StreamRequestHandler):
-
 
     @staticmethod
     def connect_process(packet: Packets.Connect, received_from: User) -> Packets.Errors:
         for user in USERS:
             if user.handle == packet.username:
                 return Packets.Errors.USER_ALREADY_EXISTS
-        USERS.append(User(packet.username,received_from))
+        USERS.append(User(packet.username, received_from.address))
         return Packets.Errors.NO_ERROR
 
     @staticmethod
@@ -142,6 +147,7 @@ class IRCServer(socketserver.StreamRequestHandler):
         # get the input
         self.data = self.rfile.readline().strip()
         new_message = Packets.encode(self.data)
+        address = self.connection.getpeername()
         # process the input
         try:
             # check for what type of packet was sent and process appropriately
