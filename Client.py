@@ -64,12 +64,7 @@ def user_input(username):
     # initial connection
     while 1:
         to_server = Packets.Connect(username)
-        try:
-            send_to_server(to_server)
-        except socket.error as e:
-            if e.errno == 111:
-                print("Couldn't connect to Server")
-                return
+        send_to_server(to_server)
         if to_server.errors == Packets.Errors.NO_ERROR:
             break
         else:
@@ -194,13 +189,10 @@ def send_to_server(message):
             for thing in to_print:
                 print(thing)
     except socket.error as e:
-        if e.errno == 111:  # connection error
-            print("Could not reach server shutting down")
-            exit(1)
-        else:
+        if testing:
             print("Error: " + e.__str__())
-            print("Could not reach server shutting down")
-            exit(1)
+        print("Could not reach server shutting down")
+        exit(1)
 
 
 if __name__ == '__main__':
