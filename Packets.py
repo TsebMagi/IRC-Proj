@@ -17,6 +17,7 @@ class OpCode(Enum):
     LIST_MEMBERS = 7
     MESSAGE = 8
     PM = 9
+    BROADCAST = 10
 
     def __str__(self):
         return self.name
@@ -138,7 +139,7 @@ class JoinRoom (Packet):
 
 class ListRooms(Packet):
 
-    def __init__(self, response=None, status=Status.OK, errors=Errors.NO_ERROR):
+    def __init__(self, response="", status=Status.OK, errors=Errors.NO_ERROR):
         super().__init__(OpCode.LIST_ROOMS, status, errors)
         self.response = response
 
@@ -160,12 +161,12 @@ class LeaveRoom(Packet):
         return (self.op_code.__str__()+" "+self.username.__str__()+" "+self.room.__str__()+" "+self.status.__str__()+" "+self.errors.__str__()+"\n").encode()
 
     def __str__(self):
-        return self.op_code.__str__()+" "+self.username.__str__()+" "+self.room.__str__()+" "+self.status.__str__()+" "+self.errors.__str__()
+        return self.op_code.__str__()+" "+self.username.__str__()+" "+self.room.__str__()+" "+self.status.__str__() + " " + self.errors.__str__()
 
 
 class ListMembers(Packet):
 
-    def __init__(self, room, response=None, status=Status.OK, errors=Errors.NO_ERROR):
+    def __init__(self, room, response="", status=Status.OK, errors=Errors.NO_ERROR):
         super().__init__(OpCode.LIST_MEMBERS, status, errors)
         self.room = room
         self.response = response
@@ -210,7 +211,7 @@ class Message(Packet):
 class Broadcast(Packet):
 
     def __init__(self, username, message, status=Status.OK,errors=Errors.NO_ERROR):
-        super().__init__(OpCode.MESSAGE, status, errors)
+        super().__init__(OpCode.BROADCAST, status, errors)
         self.username = username
         self.message = message
 
@@ -235,18 +236,18 @@ def decode(packet_arg):
     elif split_packet[0] == "CREATE_ROOM":
         return CreateRoom(split_packet[1], split_packet[2], Status.string_to_status(split_packet[-2]), Errors.string_to_error(split_packet[-1]))
     elif split_packet[0] == "JOIN_ROOM":
-        return JoinRoom(split_packet[1], split_packet[2], split_packet[-2], split_packet[-1])
+        return JoinRoom(split_packet[1], split_packet[2], Status.string_to_status(split_packet[-2]), Errors.string_to_error(split_packet[-1]))
     elif split_packet[0] == "LIST_ROOMS":
-        return ListRooms(' '.join(split_packet[1:-2]), split_packet[-2], split_packet[-1])
+        return ListRooms(' '.join(split_packet[1:-2]), Status.string_to_status(split_packet[-2]), Errors.string_to_error(split_packet[-1]))
     elif split_packet[0] == "LEAVE_ROOM":
-        return LeaveRoom(split_packet[1], split_packet[-2], split_packet[-1])
+        return LeaveRoom(split_packet[1], split_packet[2],Status.string_to_status(split_packet[-2]), Errors.string_to_error(split_packet[-1]))
     elif split_packet[0] == "LIST_MEMBERS":
-        return ListMembers(split_packet[1], ' '.join(split_packet[2:-2]), split_packet[-2], split_packet[-1])
+        return ListMembers(split_packet[1], ' '.join(split_packet[2:-2]), Status.string_to_status(split_packet[-2]), Errors.string_to_error(split_packet[-1]))
     elif split_packet[0] == "PM":
-        return Pm(split_packet[1], split_packet[2], ' '.join(split_packet[3:-2]), split_packet[-2], split_packet[-1])
+        return Pm(split_packet[1], split_packet[2], ' '.join(split_packet[3:-2]), Status.string_to_status(split_packet[-2]), Errors.string_to_error(split_packet[-1]))
     elif split_packet[0] == "MESSAGE":
-        return Message(split_packet[1], split_packet[2], ' '.join(split_packet[3:-2]), split_packet[-2], split_packet[-1])
+        return Message(split_packet[1], split_packet[2], ' '.join(split_packet[3:-2]), Status.string_to_status(split_packet[-2]), Errors.string_to_error(split_packet[-1]))
     elif split_packet[0] == "BROADCAST":
-        return Broadcast(split_packet[1], ' '.join(split_packet[2:-2]), split_packet[-2], split_packet[-1])
+        return Broadcast(split_packet[1], ' '.join(split_packet[2:-2]), Status.string_to_status(split_packet[-2]), Errors.string_to_error(split_packet[-1]))
     else:
         raise TypeError

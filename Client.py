@@ -151,6 +151,7 @@ def user_input(username):
                 print("Not a valid broadcast command try '/broadcast <message>'")
             else:
                 to_server = Packets.Broadcast(username, ' '.join(to_send[1:]))
+                send_to_server(to_server)
 
         elif user_command.find("/help") != -1:
             print(helpText)
@@ -173,6 +174,16 @@ def send_to_server(message):
         if error.status != Packets.Status.OK:
             print("Packet in Error State: " + error.errors.__str__())
         s.close()
+        if error.op_code == Packets.OpCode.LIST_ROOMS:
+            to_print = error.response.split(":")
+            print("Rooms on server: ")
+            for thing in to_print:
+                print(thing)
+        if error.op_code == Packets.OpCode.LIST_MEMBERS:
+            to_print = error.response.split(":")
+            print("Users in " + error.room + ":")
+            for thing in to_print:
+                print(thing)
     except socket.error as e:
         if e.errno == 111:  # connection error
             print("Could not connect to server")

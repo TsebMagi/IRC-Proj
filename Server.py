@@ -9,17 +9,8 @@ import signal
 testing = True
 
 
-class Disconnection(Exception):
-
-    def __init__(self, value):
-        self.value = value
-
-    def __str__(self):
-        return repr(self.value)
-
-
 class User(object):
-    def __init__(self, handle: str, address):
+    def __init__(self, handle, address):
         self.handle = handle
         self.address = address
 
@@ -40,15 +31,15 @@ class Room(object):
 
     def in_room(self,username):
         for user in self.users:
-            if user[0] == username:
+            if user == username:
                 return True
         return False
 
     def remove_user(self,username):
         for user in self.users:
-            if user[0] == username:
-                USERS.remove(user)
-                return TypeError
+            if user == username:
+                self.users.remove(user)
+                return True
         return False
 
 
@@ -100,7 +91,10 @@ class IRCServer(socketserver.StreamRequestHandler):
                 return Packets.Status.ERROR, Packets.Errors.ROOM_ALREADY_EXISTS
         ROOMS.append(Room(packet.room, packet.username))
         if testing:
-            print("Rooms: " + ROOMS.__str__())
+            room_string = ""
+            for room in ROOMS:
+                room_string += room.room_name + room.users.__str__()
+            print("Rooms: " + room_string)
         return Packets.Status.OK, Packets.Errors.NO_ERROR
 
     @staticmethod
@@ -111,12 +105,16 @@ class IRCServer(socketserver.StreamRequestHandler):
                 return Packets.Status.OK, Packets.Errors.NO_ERROR
         ROOMS.append(Room(packet.room, packet.username))
         if testing:
-            print("Rooms: " + ROOMS.__str__())
+            room_string = ""
+            for room in ROOMS:
+                room_string += room.room_name + room.users.__str__()
+            print("Rooms: " + room_string)
         return Packets.Status.OK, Packets.Errors.NO_ERROR
 
     @staticmethod
     def leave_room_process(packet):
         for room in ROOMS:
+            if room.room_name == packet.room:
                 room.remove_user(packet.username)
                 return Packets.Status.OK, Packets.Errors.NO_ERROR
         return Packets.Status.ERROR, Packets.Errors.USER_NOT_IN_ROOM
@@ -132,7 +130,7 @@ class IRCServer(socketserver.StreamRequestHandler):
         for room in ROOMS:
             if room.room_name == packet.room:
                 for user in room.users:
-                    packet.response += (user[0] + ":")
+                    packet.response += (user + ":")
                 return packet
         packet.status = Packets.Status.ERROR
         packet.errors = Packets.Errors.ROOM_NOT_FOUND
@@ -141,7 +139,7 @@ class IRCServer(socketserver.StreamRequestHandler):
     @staticmethod
     def message_process(self, packet):
         for room in ROOMS:
-            if room.room_name == packet.room_to_message:
+            if packet.room_to_message == room.room_name:
                 for user in USERS:
                     if room.in_room(user[0]):
                         self.send_packet(packet, user)
@@ -152,8 +150,9 @@ class IRCServer(socketserver.StreamRequestHandler):
 
     @staticmethod
     def pm_process(self, packet):
+        search = packet.sent_to
         for user in USERS:
-            if user[0] == packet.sent_to:
+            if user[0] == search:
                 self.send_packet(packet,user)
                 return packet
         packet.status = Packets.Status.ERROR
@@ -177,6 +176,7 @@ class IRCServer(socketserver.StreamRequestHandler):
     def broadcast_process(self, packet):
         for user in USERS:
             self.send_packet(packet, user)
+        return packet
 
     def handle(self):
         # get the input
