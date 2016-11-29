@@ -68,11 +68,15 @@ class IRCServer(socketserver.StreamRequestHandler):
     def connect_process(packet, received_from):
         for user in USERS:
             if user[0] == packet.username:
-                return Packets.Status.ERROR, Packets.Errors.USER_ALREADY_EXISTS
+                packet.status = Packets.Status.ERROR
+                packet.errors = Packets.Errors.USER_ALREADY_EXISTS
+                return packet
         USERS.append((packet.username, received_from[1]))
         if testing:
             print("Users: " + USERS.__str__())
-        return Packets.Status.OK, Packets.Errors.NO_ERROR
+        packet.status = Packets.Status.OK
+        packet.errors = Packets.Errors.NO_ERROR
+        return packet
 
     @staticmethod
     def disconnect_process(packet):
@@ -81,43 +85,59 @@ class IRCServer(socketserver.StreamRequestHandler):
                 USERS.remove(user)
                 for room in ROOMS:
                     room.remove_user(packet.username)
-                return Packets.Status.OK, Packets.Errors.NO_ERROR
-        return Packets.Status.ERROR, Packets.Errors.USER_NOT_FOUND
+                packet.status = Packets.Status.OK
+                packet.errors = Packets.Errors.NO_ERROR
+                return packet
+        packet.status = Packets.Status.ERROR
+        packet.errors = Packets.Errors.USER_NOT_FOUND
+        return packet
 
     @staticmethod
     def create_room_process(packet):
         for room in ROOMS:
             if room.room_name == packet.room:
-                return Packets.Status.ERROR, Packets.Errors.ROOM_ALREADY_EXISTS
+                packet.errors =  Packets.Status.ERROR
+                packet.errors =  Packets.Errors.ROOM_ALREADY_EXISTS
+                return packet
         ROOMS.append(Room(packet.room, packet.username))
         if testing:
             room_string = ""
             for room in ROOMS:
                 room_string += room.room_name + room.users.__str__()
             print("Rooms: " + room_string)
-        return Packets.Status.OK, Packets.Errors.NO_ERROR
+        packet.status = Packets.Status.OK
+        packet.errors = Packets.Errors.NO_ERROR
+        return packet
 
     @staticmethod
     def join_room_process(packet):
         for room in ROOMS:
             if room.room_name == packet.room:
                 room.add_to_room(packet.username)
-                return Packets.Status.OK, Packets.Errors.NO_ERROR
+                packet.status = Packets.Status.OK
+                packet.errors = Packets.Errors.NO_ERROR
+                return packet
         ROOMS.append(Room(packet.room, packet.username))
         if testing:
             room_string = ""
             for room in ROOMS:
                 room_string += room.room_name + room.users.__str__()
             print("Rooms: " + room_string)
-        return Packets.Status.OK, Packets.Errors.NO_ERROR
+        packet.status = Packets.Status.OK
+        packet.errors = Packets.Errors.NO_ERROR
+        return packet
 
     @staticmethod
     def leave_room_process(packet):
         for room in ROOMS:
             if room.room_name == packet.room:
                 room.remove_user(packet.username)
-                return Packets.Status.OK, Packets.Errors.NO_ERROR
-        return Packets.Status.ERROR, Packets.Errors.USER_NOT_IN_ROOM
+                packet.status = Packets.Status.OK
+                packet.errors = Packets.Errors.NO_ERROR
+                return packet
+        packet.status = Packets.Status.ERROR
+        packet.errors = Packets.Errors.USER_NOT_IN_ROOM
+        return packet
 
     @staticmethod
     def list_rooms_process(packet):
@@ -150,11 +170,15 @@ class IRCServer(socketserver.StreamRequestHandler):
 
     @staticmethod
     def pm_process(self, packet):
-        search = packet.sent_to
-        for user in USERS:
-            if user[0] == search:
-                self.send_packet(packet,user)
-                return packet
+        try:
+            for user in USERS:
+                if (user[0]) == packet.sent_to:
+                    self.send_packet(packet, user)
+                    return packet
+        except TypeError as e:
+            packet.status = Packets.Status.ERROR
+            packet.errors = Packets.Errors.USER_NOT_FOUND
+            return packet
         packet.status = Packets.Status.ERROR
         packet.errors = Packets.Errors.USER_NOT_FOUND
         return packet
@@ -195,19 +219,19 @@ class IRCServer(socketserver.StreamRequestHandler):
         try:
             # check for what type of packet was sent and process appropriately
             if isinstance(new_message, Packets.Connect):
-                new_message.status, new_message.errors = self.connect_process(new_message,(new_message.username, address))
+                new_message = self.connect_process(new_message, (new_message.username, address))
             elif isinstance(new_message, Packets.Disconnect):
-                new_message.status, new_message.errors = self.disconnect_process(new_message)
+                new_message = self.disconnect_process(new_message)
             elif isinstance(new_message, Packets.CreateRoom):
-                new_message.status, new_message.errors = self.create_room_process(new_message)
+                new_message = self.create_room_process(new_message)
             elif isinstance(new_message,Packets.JoinRoom):
-                new_message.status, new_message.errors = self.join_room_process(new_message)
+                new_message = self.join_room_process(new_message)
             elif isinstance(new_message, Packets.LeaveRoom):
-                new_message.status, new_message.errors = self.leave_room_process(new_message)
+                new_messagev= self.leave_room_process(new_message)
             elif isinstance(new_message, Packets.Message):
-                new_message.status, new_message.errors = self.message_process(self, new_message)
+                new_message = self.message_process(self, new_message)
             elif isinstance(new_message, Packets.Pm):
-                new_message.status, new_message.errors = self.pm_process(self, new_message)
+                new_message = self.pm_process(self, new_message)
             elif isinstance(new_message, Packets.ListMembers):
                 new_message = self.list_members(new_message)
             elif isinstance(new_message, Packets.Broadcast):
