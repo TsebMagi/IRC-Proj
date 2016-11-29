@@ -170,15 +170,10 @@ class IRCServer(socketserver.StreamRequestHandler):
 
     @staticmethod
     def pm_process(self, packet):
-        try:
-            for user in USERS:
-                if (user[0]) == packet.sent_to:
-                    self.send_packet(packet, user)
-                    return packet
-        except TypeError as e:
-            packet.status = Packets.Status.ERROR
-            packet.errors = Packets.Errors.USER_NOT_FOUND
-            return packet
+        for user in USERS:
+            if (user[0]) == packet.sent_to:
+                self.send_packet(packet, user)
+                return packet
         packet.status = Packets.Status.ERROR
         packet.errors = Packets.Errors.USER_NOT_FOUND
         return packet

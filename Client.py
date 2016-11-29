@@ -5,7 +5,6 @@ import Packets
 import threading
 import socketserver
 import socket
-import time
 
 testing = True
 
@@ -63,13 +62,23 @@ class IRCClient(socketserver.StreamRequestHandler):
 
 def user_input(username):
     # initial connection
-    to_server = Packets.Connect(username)
-    try:
-        send_to_server(to_server)
-    except socket.error as e:
-        if e.errno == 111:
-            print("Couldn't connect to Server")
-            return
+    while 1:
+        to_server = Packets.Connect(username)
+        try:
+            send_to_server(to_server)
+        except socket.error as e:
+            if e.errno == 111:
+                print("Couldn't connect to Server")
+                return
+        if to_server.errors == Packets.Errors.NO_ERROR:
+            break
+        else:
+            print("Invalid User name it already exists on the server")
+            username = input("Enter Username: ").strip()
+            while username.find(' ') != -1:
+                print("Invalid user name, no spaces allowed")
+                username = input("Enter Username: ").strip()
+
     while 1:
         user_command = input(lineHeader + username + "> ")
         if user_command == "/quit":
@@ -172,7 +181,7 @@ def send_to_server(message):
             print("Response from Server: " + response)
         error = Packets.decode(response)
         if error.status != Packets.Status.OK:
-            print("Packet in Error State: " + error.errors.__str__())
+            print("Error from Server: " + error.errors.__str__())
         s.close()
         if error.op_code == Packets.OpCode.LIST_ROOMS:
             to_print = error.response.split(":")
@@ -186,9 +195,12 @@ def send_to_server(message):
                 print(thing)
     except socket.error as e:
         if e.errno == 111:  # connection error
-            print("Could not connect to server")
+            print("Could not reach server shutting down")
+            exit(1)
         else:
             print("Error: " + e.__str__())
+            print("Could not reach server shutting down")
+            exit(1)
 
 
 if __name__ == '__main__':
